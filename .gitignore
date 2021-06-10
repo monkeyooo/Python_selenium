@@ -150,3 +150,8 @@ crashlytics-build.properties
 fabric.properties
 
 *.png
+/.idea/
+/image.png
+/inside.png
+/myData.csv
+/test.csv
