@@ -10,6 +10,7 @@ from PIL import Image
 from selenium import webdriver
 from selenium.common.exceptions import NoAlertPresentException, NoSuchElementException
 from selenium.webdriver.support.select import Select
+
 # -----------------------------------------------------------main-----------------------------------------------------------
 # parameters 一些設定所需參數
 account = '89855397'
@@ -28,7 +29,7 @@ city = '臺中市'
 area = '東區'
 
 driver = webdriver.Chrome('/Users/chuck/Desktop/Work-RMC/Script/chromedriver')
-time.sleep(waitTime) # 須設置等待時間否則UI生成太慢會造成找不到物件
+time.sleep(waitTime)  # 須設置等待時間否則UI生成太慢會造成找不到物件
 urlLocation = 'https://ep.land.nat.gov.tw/Home/Index'
 driver.get(urlLocation)
 time.sleep(waitTime)
@@ -124,14 +125,14 @@ print('Captcha correct : ')
 print(captchaAccept)
 
 
-def get_section_detail_list(street):
+def get_section_detail_list(street, currentId):
     try:
         # 建立Connection物件
         conn = pymysql.connect(**db_settings)
         # 建立Cursor物件
         with conn.cursor() as cursor:
-            command = "SELECT * FROM taichung WHERE area LIKE %s AND `section` LIKE %s"
-            cursor.execute(command, (area, '%' + street + '%'))
+            command = "SELECT * FROM taichung WHERE area LIKE %s AND `section` LIKE %s AND id > %s"
+            cursor.execute(command, (area, '%' + street + '%', currentId))
             result = cursor.fetchall()
         # 儲存變更
         print(result)
@@ -156,12 +157,15 @@ def get_section_list():
         print(ex)
 
 
+currentId = 10381
+
 if captchaAccept:
     sectionDataList = get_section_list()
     for sectionData in sectionDataList:
+        print(sectionData[0])
         driver.get('https://ep.land.nat.gov.tw/EpaperApply/TaiwanMap')
         time.sleep(waitTime)
-        dataList = get_section_detail_list(area, sectionData)
+        dataList = get_section_detail_list(sectionData[0], currentId)
         select = Select(driver.find_element_by_id('City_ID'))
         select.select_by_visible_text(city)
         select = Select(driver.find_element_by_id('area_id'))
@@ -169,7 +173,7 @@ if captchaAccept:
         main_page = driver.current_window_handle
         for landData in dataList:
             dataId = landData[0]
-            section_name = sectionData
+            section_name = sectionData[0]
             land_no = landData[3]
             sectionSelectionList = driver.find_elements_by_class_name('session_name')
 
@@ -212,7 +216,6 @@ if captchaAccept:
                                 detail = dataInfo.split(" ")
                                 print(detail[0], detail[1])
                                 writer.writerow([dataId, detail[0], detail[1]])
-                    time.sleep(waitTime)
                 print('finished write csv')
             except NoSuchElementException:
                 print('Data not found')
