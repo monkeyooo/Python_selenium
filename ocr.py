@@ -65,7 +65,8 @@ def main(argv):
         th, text, boxes = predicter.trans(img)
         captchaText = text
     else:
-        captchaText = recognize_text(filename)
+        img = cv2.imread(filename)
+        captchaText = recognize_text(img)
     print(captchaText)
 
 
